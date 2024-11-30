@@ -1,0 +1,12 @@
+zipcode,city,state_code,state_name,zcta,zcta_parent,population,density,county_code,county_name,county_weights,county_names,county_codes,imprecise,military,timezone,geo_point
+851,Kingshill,VI,Virgin Islands,True,,,,78010,St. Croix,"{""78010"": 100}",St. Croix,78010,False,False,America/St_Thomas,"17.73267, -64.77158"
+823,Christiansted,VI,Virgin Islands,True,,,,78010,St. Croix,"{""78010"": 100}",St. Croix,78010,False,False,America/St_Thomas,"17.73281, -64.74653"
+801,St Thomas,VI,Virgin Islands,True,,,,78030,St. Thomas,"{""78030"": 100}",St. Thomas,78030,False,False,America/St_Thomas,"18.34856, -64.97502"
+841,Frederiksted,VI,Virgin Islands,True,,,,78010,St. Croix,"{""78010"": 100}",St. Croix,78010,False,False,America/St_Thomas,"17.73373, -64.83742"
+831,St John,VI,Virgin Islands,True,,,,78020,St. John,"{""78020"": 100}",St. John,78020,False,False,America/St_Thomas,"18.32716, -64.78676"
+824,Christiansted,VI,Virgin Islands,True,,,,78010,St. Croix,"{""78010"": 100}",St. Croix,78010,False,False,America/St_Thomas,"17.74461, -64.68276"
+850,Kingshill,VI,Virgin Islands,True,,,,78010,St. Croix,"{""78010"": 100}",St. Croix,78010,False,False,America/St_Thomas,"17.72819, -64.7939"
+830,St John,VI,Virgin Islands,True,,,,78020,St. John,"{""78020"": 100}",St. John,78020,False,False,America/St_Thomas,"18.33851, -64.73804"
+820,Christiansted,VI,Virgin Islands,True,,,,78010,St. Croix,"{""78010"": 100}",St. Croix,78010,False,False,America/St_Thomas,"17.74147, -64.687"
+840,Frederiksted,VI,Virgin Islands,True,,,,78010,St. Croix,"{""78010"": 100}",St. Croix,78010,False,False,America/St_Thomas,"17.72484, -64.85931"
+802,St Thomas,VI,Virgin Islands,True,,,,78030,St. Thomas,"{""78030"": 100}",St. Thomas,78030,False,False,America/St_Thomas,"18.34225, -64.92657"

@@ -1,0 +1,2 @@
+zipcode,city,state_code,state_name,zcta,zcta_parent,population,density,county_code,county_name,county_weights,county_names,county_codes,imprecise,military,timezone,geo_point
+96799,Pago Pago,AS,American Samoa,True,,,,60050,Western,"{""60050"": 36.38, ""60010"": 32.64, ""60020"": 29.2, ""60040"": 1.78}","Western,Eastern,Manu'a,Swains Island","60050,60010,60020,60040",False,False,Pacific/Pago_Pago,"-14.21967, -170.3693"

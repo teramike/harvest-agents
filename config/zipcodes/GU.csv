@@ -1,0 +1,10 @@
+zipcode,city,state_code,state_name,zcta,zcta_parent,population,density,county_code,county_name,county_weights,county_names,county_codes,imprecise,military,timezone,geo_point
+96921,Barrigada,GU,Guam,True,,,,66010,Guam,"{""66010"": 100}",Guam,66010,False,False,Pacific/Guam,"13.45902, 144.79397"
+96915,Santa Rita,GU,Guam,True,,,,66010,Guam,"{""66010"": 100}",Guam,66010,False,False,Pacific/Guam,"13.3782, 144.70165"
+96916,Merizo,GU,Guam,True,,,,66010,Guam,"{""66010"": 100}",Guam,66010,False,False,Pacific/Guam,"13.26053, 144.70067"
+96917,Inarajan,GU,Guam,True,,,,66010,Guam,"{""66010"": 100}",Guam,66010,False,False,Pacific/Guam,"13.29489, 144.73413"
+96913,Barrigada,GU,Guam,True,,,,66010,Guam,"{""66010"": 100}",Guam,66010,False,False,Pacific/Guam,"13.47783, 144.8146"
+96929,Yigo,GU,Guam,True,,,,66010,Guam,"{""66010"": 100}",Guam,66010,False,False,Pacific/Guam,"13.5651, 144.8762"
+96932,Hagatna,GU,Guam,True,,,,66010,Guam,"{""66010"": 100}",Guam,66010,False,False,Pacific/Guam,"13.47524, 144.74216"
+96928,Agat,GU,Guam,True,,,,66010,Guam,"{""66010"": 100}",Guam,66010,False,False,Pacific/Guam,"13.38497, 144.66153"
+96910,Hagatna,GU,Guam,True,,,,66010,Guam,"{""66010"": 100}",Guam,66010,False,False,Pacific/Guam,"13.45476, 144.75089"

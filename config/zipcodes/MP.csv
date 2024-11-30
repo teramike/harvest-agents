@@ -1,0 +1,4 @@
+zipcode,city,state_code,state_name,zcta,zcta_parent,population,density,county_code,county_name,county_weights,county_names,county_codes,imprecise,military,timezone,geo_point
+96952,Tinian,MP,Northern Mariana Islands,True,,,,69120,Tinian,"{""69120"": 100}",Tinian,69120,False,False,Pacific/Saipan,"15.01312, 145.63149"
+96950,Saipan,MP,Northern Mariana Islands,True,,,,69110,Saipan,"{""69110"": 100}",Saipan,69110,False,False,Pacific/Saipan,"15.18887, 145.75356"
+96951,Rota,MP,Northern Mariana Islands,True,,,,69100,Rota,"{""69100"": 100}",Rota,69100,False,False,Pacific/Saipan,"14.15733, 145.2145"
