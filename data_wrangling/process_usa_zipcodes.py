@@ -20,7 +20,7 @@ import os
 import pandas as pd
 
 # %%
-PATH_ZIPCODES = 'config/usa_zipcodes.csv'
+PATH_ZIPCODES = 'data/config/usa_zipcodes.csv'
 
 # %%
 df = pd.read_csv(PATH_ZIPCODES, sep=';')
