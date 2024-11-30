@@ -41,6 +41,13 @@ for filename in os.listdir(PATH_INPUT):
                 "type": "knowledge_graph",
                 "data": knowledge_graph
             })
+
+        related_questions = data.get('relatedQuestions', [])
+        if related_questions:
+            results.append({
+                "type": "related_questions",
+                "data": related_questions
+            })
         
         # Print the filename and the number of organic results
         print(f"Processing: {filename}")

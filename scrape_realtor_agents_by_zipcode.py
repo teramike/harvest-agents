@@ -9,6 +9,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import pandas as pd
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from tqdm import tqdm
 from zenrows import ZenRowsClient
 
 # Load environment variables
@@ -165,17 +166,20 @@ def main():
 
     start_time = time.time()
 
-    # Use ProcessPoolExecutor to process zipcodes in parallel
-    with ProcessPoolExecutor(max_workers=args.max_workers) as executor:
-        futures = []
-        for zipcode in zipcodes:
-            futures.append(executor.submit(scrape_zipcode, zipcode, args.output_dir, api_key))
+    # Add progress bar for overall zipcode processing
+    with tqdm(total=len(zipcodes), desc="Processing zipcodes") as pbar:
+        # Use ProcessPoolExecutor to process zipcodes in parallel
+        with ProcessPoolExecutor(max_workers=args.max_workers) as executor:
+            futures = []
+            for zipcode in zipcodes:
+                futures.append(executor.submit(scrape_zipcode, zipcode, args.output_dir, api_key))
 
-        for future in as_completed(futures):
-            try:
-                future.result()
-            except Exception as e:
-                logger.error(f"An error occurred: {e}")
+            for future in as_completed(futures):
+                try:
+                    future.result()
+                except Exception as e:
+                    logger.error(f"An error occurred: {e}")
+                pbar.update(1)
 
     end_time = time.time()
     logger.info(f"Total execution time: {end_time - start_time:.2f} seconds")
