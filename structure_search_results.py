@@ -8,7 +8,6 @@ import aiofiles
 import pandas as pd
 from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
-from tqdm.asyncio import tqdm as async_tqdm
 
 PATH_INPUT = 'data/realtor_agents_enhanced'
 PATH_SEARCH_RESULTS = 'data/clean_google_searches'
@@ -28,23 +27,19 @@ for file in os.listdir(PATH_OUTPUT):
 class AgentData(BaseModel):
     email: Optional[str] = Field(
         None,
-        description=
-        "The most relevant real estate agent's professional email address, if available"
+        description="The most relevant real estate agent's professional email address, if available"
     )
     other_emails: Optional[List[str]] = Field(
         None,
-        description=
-        "Any other email addresses found for the real estate agent or its brokerage firm"
+        description="Any other email addresses found for the real estate agent or its brokerage firm"
     )
     possible_email: Optional[str] = Field(
         None,
-        description=
-        "The most likely email address for the real estate agent if it's main email is not available"
+        description="The most likely email address for the real estate agent if its main email is not available"
     )
     phone: Optional[str] = Field(
         None,
-        description=
-        "The most relevant real estate agent's professional phone number or its brokerage firm, if available"
+        description="The most relevant real estate agent's professional phone number or its brokerage firm, if available"
     )
     other_phones: Optional[List[str]] = Field(
         None,
@@ -52,38 +47,37 @@ class AgentData(BaseModel):
     )
     city: Optional[str] = Field(
         None,
-        description="The city where the real estate agent primarily operates")
+        description="The city where the real estate agent primarily operates"
+    )
     age: Optional[int] = Field(
-        None, description="The age of the real estate agent, if available")
+        None, description="The age of the real estate agent, if available"
+    )
     gender: Optional[str] = Field(
-        None, description="The gender of the real estate agent, if available")
+        None, description="The gender of the real estate agent, if available"
+    )
     website: Optional[str] = Field(
         None,
-        description=
-        "The real estate agent's professional website or listing page")
+        description="The real estate agent's professional website or listing page"
+    )
     social_media: Optional[List[str]] = Field(
         None,
-        description=
-        "List of social media profiles related to the agent's real estate business"
+        description="List of social media profiles related to the agent's real estate business"
     )
     google_review_star_rating: Optional[float] = Field(
         None,
-        description=
-        "The Google review star rating of the real estate agent or the brokerage firm, if available"
+        description="The Google review star rating of the real estate agent or the brokerage firm, if available"
     )
     most_recent_reviews: Optional[List[str]] = Field(
         None,
-        description=
-        "The most recent reviews of the real estate agent, if available")
+        description="The most recent reviews of the real estate agent, if available"
+    )
     additional_info: Optional[str] = Field(
         None,
-        description=
-        "Relevant information about the real estate agent or their practice that might be interesting to know before contacting them with a personalized message so that they are more likely to respond"
+        description="Relevant information about the real estate agent or their practice that might be interesting to know before contacting them with a personalized message so that they are more likely to respond"
     )
 
 
-async def extract_search_results(agent_id, search_query,
-                                 google_search_results):
+async def extract_search_results(agent_id, search_query, google_search_results):
     filename = f"{agent_id}.json"
     filepath = os.path.join(PATH_OUTPUT, filename)
 
@@ -94,33 +88,31 @@ async def extract_search_results(agent_id, search_query,
     client = AsyncOpenAI()
     try:
         completion = await client.beta.chat.completions.parse(
-            model='gpt-4-0824',
+            model='gpt-4o',
             temperature=0,
             max_tokens=4096,
-            messages=[{
-                "role":
-                "system",
-                "content":
-                "You're a master at finding relevant real estate agent information. You stick to the provided Google search data, and only if explicitly available extract data as valid JSON according to the provided schema."
-            }, {
-                "role":
-                "user",
-                "content":
-                f"When searching for the following real estate agent on Google: {search_query}, we got these results:\n{google_search_results}.\nExtract the relevant information found as valid JSON:"
-            }],
-            response_format=AgentData)
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You're a master at finding relevant real estate agent information. You stick to the provided Google search data, and only if explicitly available extract data as valid JSON according to the provided schema."
+                },
+                {
+                    "role": "user",
+                    "content": f"When searching for the following real estate agent on Google: {search_query}, we got these results:\n{google_search_results}.\nExtract the relevant information found as valid JSON:"
+                }
+            ],
+            response_format=AgentData
+        )
 
         if completion.choices[0].message.refusal:
-            print(
-                f"Model refused to respond: {completion.choices[0].message.refusal}"
-            )
+            print(f"Model refused to respond: {completion.choices[0].message.refusal}")
             return None
 
         agent_data = completion.choices[0].message.parsed
 
         # Use aiofiles for async file writing
         async with aiofiles.open(filepath, 'w', encoding='utf-8') as f:
-            await f.write(json.dumps(agent_data.dict(), indent=2))
+            await f.write(json.dumps(agent_data.model_dump(), indent=2))
 
         print(f"Processed agent_id: {agent_id}")
         return agent_data
@@ -130,7 +122,7 @@ async def extract_search_results(agent_id, search_query,
         return None
 
 
-async def process_agent(row):
+async def process_agent(row, semaphore):
     agent_id = row['id']
     if agent_id in PROCESSED_AGENTS:
         print(f"Skipping agent_id: {agent_id} (already processed)")
@@ -155,16 +147,15 @@ async def process_agent(row):
 
     search_results_file = os.path.join(PATH_SEARCH_RESULTS, f"{agent_id}.json")
     try:
-        async with aiofiles.open(search_results_file, 'r',
-                                 encoding='utf-8') as f:
+        async with aiofiles.open(search_results_file, 'r', encoding='utf-8') as f:
             content = await f.read()
             google_search_results = json.loads(content)
     except FileNotFoundError:
         print(f"Search results file not found for agent ID: {agent_id}")
         return None
 
-    return await extract_search_results(agent_id, search_query,
-                                        google_search_results)
+    async with semaphore:
+        return await extract_search_results(agent_id, search_query, google_search_results)
 
 
 async def process_csv_file(csv_file, semaphore):
@@ -174,18 +165,16 @@ async def process_csv_file(csv_file, semaphore):
         return []
 
     df_relevant = df[['id', 'Name', 'Company', 'City', 'County']]
-    tasks = []
-
-    for _, row in df_relevant.iterrows():
-        async with semaphore:  # Control concurrency
-            task = asyncio.create_task(process_agent(row))
-            tasks.append(task)
-
+    tasks = [process_agent(row, semaphore) for _, row in df_relevant.iterrows()]
     results = []
-    async for result in async_tqdm.as_completed(tasks,
-                                                desc="Processing agents"):
-        if result is not None:
-            results.append(result)
+
+    for coro in asyncio.as_completed(tasks):
+        try:
+            result = await coro
+            if result is not None:
+                results.append(result)
+        except Exception as e:
+            print(f"Error processing agent: {str(e)}")
 
     return results
 
@@ -197,7 +186,7 @@ async def main():
     semaphore = asyncio.Semaphore(10)  # Adjust based on API limits
 
     all_results = []
-    async for csv_file in async_tqdm(csv_files, desc="Processing CSV files"):
+    for csv_file in csv_files:
         try:
             results = await process_csv_file(csv_file, semaphore)
             all_results.extend(results)
