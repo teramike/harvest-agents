@@ -38,9 +38,11 @@ def extract_agent_info(card):
     agent_info['Brokerage Picture URL'] = brokerage_pic['src'] if brokerage_pic else ''
 
     # Experience
+    # Look for "Experience: ..." inside a div that contains that text and a bold-text span
     experience_div = card.find("div", text=re.compile(r'Experience:'))
     if experience_div:
-        agent_info['Experience'] = experience_div.get_text(strip=True).replace('Experience:', '').strip()
+        exp_span = experience_div.find("span", class_="bold-text")
+        agent_info['Experience'] = exp_span.get_text(strip=True) if exp_span else ''
     else:
         agent_info['Experience'] = ''
 
@@ -50,28 +52,47 @@ def extract_agent_info(card):
 
     # Email (Check if Email button exists)
     email_button = card.select_one("span.agent-email button")
-    if email_button:
-        # The actual email address may not be directly available due to privacy reasons.
-        # Instead, we can note that the agent has an email contact option.
-        agent_info['Email Available'] = 'Yes'
-    else:
-        agent_info['Email Available'] = 'No'
+    agent_info['Email Available'] = 'Yes' if email_button else 'No'
 
-    # For Sale
-    for_sale_label = card.find("span", string=re.compile(r'For sale:'))
-    if for_sale_label:
-        for_sale_value = for_sale_label.find_next("span", class_="bold-text")
-        agent_info['For Sale'] = for_sale_value.get_text(strip=True) if for_sale_value else ''
+    # For Sale and Sold:
+    # They both appear in the same div, something like:
+    # <div class="... pb-1 pt-16">For sale: <span>3</span> Sold: <span>6</span></div>
+    for_sale_sold_div = card.find("div", class_=re.compile(r'pb-1.*pt-16'))
+    if for_sale_sold_div:
+        text = for_sale_sold_div.get_text(" ", strip=True)
+        # Example text: "For sale: 3 Sold: 6"
+        # Use regex to extract the numbers
+        match = re.search(r"For sale:\s*(\d+).+Sold:\s*(\d+)", text)
+        if match:
+            agent_info['For Sale'] = match.group(1)
+            agent_info['Sold'] = match.group(2)
+        else:
+            agent_info['For Sale'] = ''
+            agent_info['Sold'] = ''
     else:
         agent_info['For Sale'] = ''
-
-    # Sold
-    sold_label = card.find("span", string=re.compile(r'Sold:'))
-    if sold_label:
-        sold_value = sold_label.find_next("span", class_="bold-text")
-        agent_info['Sold'] = sold_value.get_text(strip=True) if sold_value else ''
-    else:
         agent_info['Sold'] = ''
+
+    # Reviews and Recommendations
+    # They appear as:
+    # <span class="agent-reviews">1 reviews</span> | <span class="agent-recommand">1 recommendations</span>
+    reviews_span = card.select_one("span.agent-reviews")
+    if reviews_span:
+        reviews_text = reviews_span.get_text(strip=True)
+        # Extract just the digit
+        reviews_num = re.sub(r'\D', '', reviews_text)
+        agent_info['Reviews'] = reviews_num if reviews_num else '0'
+    else:
+        agent_info['Reviews'] = '0'
+
+    recomm_span = card.select_one("span.agent-recommand")
+    if recomm_span:
+        recomm_text = recomm_span.get_text(strip=True)
+        # Extract just the digit
+        recomm_num = re.sub(r'\D', '', recomm_text)
+        agent_info['Recommendations'] = recomm_num if recomm_num else '0'
+    else:
+        agent_info['Recommendations'] = '0'
 
     # Activity Range
     activity_range_div = card.find("div", text=re.compile(r'Activity range:'))
@@ -81,7 +102,7 @@ def extract_agent_info(card):
     else:
         agent_info['Activity Range'] = ''
 
-    # Last Listed
+    # Last Listed (Listed a house)
     listed_date_div = card.find("div", text=re.compile(r'Listed a house:'))
     if listed_date_div:
         listed_date_value = listed_date_div.find("span", class_="bold-text")
@@ -89,7 +110,24 @@ def extract_agent_info(card):
     else:
         agent_info['Last Listed'] = ''
 
-    # Badges / Certifications
+    # Last Sold (Sold a house)
+    sold_house_div = card.find("div", text=re.compile(r'Sold a house:'))
+    if sold_house_div:
+        sold_house_value = sold_house_div.find("span", class_="bold-text")
+        agent_info['Last Sold'] = sold_house_value.get_text(strip=True) if sold_house_value else ''
+    else:
+        agent_info['Last Sold'] = ''
+
+    # Languages
+    language_div = card.find("div", class_="agent-language")
+    if language_div:
+        lang_span = language_div.find("span", class_="bold-text")
+        agent_info['Languages'] = lang_span.get_text(strip=True) if lang_span else ''
+    else:
+        agent_info['Languages'] = ''
+
+    # Certifications
+    # The icons have classes like "icon-certification-gri", "icon-certification-crs", etc.
     badges = []
     badge_icons = card.select("div.desigations_certifications-icons i")
     for badge_icon in badge_icons:
@@ -101,7 +139,6 @@ def extract_agent_info(card):
     agent_info['Certifications'] = ', '.join(badges)
 
     return agent_info
-
 def scrape_realtor_agents(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
     agents_info = []

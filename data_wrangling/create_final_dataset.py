@@ -82,38 +82,11 @@ df_final = pd.merge(df_realtors, df_search_results, on='id', how='outer')
 
 
 # %%
+df_final
+
+# %%
 # Rename columns to snake_case
-df_final.columns = [
-    'name', 
-    'profile_picture_url', 
-    'company', 
-    'brokerage_picture_url',
-    'experience', 
-    'phone', 
-    'email_available', 
-    'for_sale', 
-    'sold',
-    'activity_range', 
-    'last_listed', 
-    'certifications', 
-    'id', 
-    'zipcode',
-    'city', 
-    'county', 
-    'search_email', 
-    'search_other_emails',
-    'search_possible_email', 
-    'search_phone', 
-    'search_other_phones',
-    'search_city', 
-    'search_age', 
-    'search_gender', 
-    'search_website',
-    'search_social_media', 
-    'search_google_review_star_rating',
-    'search_most_recent_reviews', 
-    'search_additional_info'
-]
+df_final.columns = df_final.columns.str.lower().str.replace(' ', '_')
 
 # Reorder columns based on importance
 df_final = df_final[
@@ -135,6 +108,8 @@ df_final = df_final[
         'email_available',
         'for_sale',
         'sold',
+        'reviews',
+        'recommendations',
         'activity_range',
         'last_listed',
         'certifications',

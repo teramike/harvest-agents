@@ -38,7 +38,7 @@ def filter_zipcodes(df, state=None, city=None, county_name=None, min_population=
 
 def main():
     parser = argparse.ArgumentParser(description='Filter zipcodes based on various criteria.')
-    parser.add_argument('--zipcodes_dir', required=True, help='Directory containing zipcode CSV files.')
+    parser.add_argument('--zipcodes_dir', default='config/zipcodes', help='Directory containing zipcode CSV files.')
     parser.add_argument('--state', help='State code to filter by (e.g., "AK" for Alaska).')
     parser.add_argument('--city', help='City name to filter by.')
     parser.add_argument('--county', help='County name to filter by.')
