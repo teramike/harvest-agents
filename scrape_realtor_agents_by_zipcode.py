@@ -197,18 +197,33 @@ def main():
     if not api_key:
         raise ValueError("ZENROWS_API_KEY not found in environment variables")
 
+    # Create output directory if it doesn't exist
+    os.makedirs(args.output_dir, exist_ok=True)
+
     # Read zipcodes from the file
     with open(args.zipcodes_file, 'r') as f:
         zipcodes = [line.strip() for line in f if line.strip()]
 
+    # Filter out already scraped zipcodes
+    existing_files = set(os.listdir(args.output_dir))
+    zipcodes_to_scrape = [
+        zipcode for zipcode in zipcodes 
+        if f'agents_info_{zipcode}.csv' not in existing_files
+    ]
+
+    if not zipcodes_to_scrape:
+        logger.info("All zipcodes have already been scraped!")
+        return
+
+    logger.info(f"Found {len(zipcodes_to_scrape)} zipcodes to scrape out of {len(zipcodes)} total zipcodes")
     start_time = time.time()
 
     # Add progress bar for overall zipcode processing
-    with tqdm(total=len(zipcodes), desc="Processing zipcodes") as pbar:
+    with tqdm(total=len(zipcodes_to_scrape), desc="Processing zipcodes") as pbar:
         # Use ProcessPoolExecutor to process zipcodes in parallel
         with ProcessPoolExecutor(max_workers=args.max_workers) as executor:
             futures = []
-            for zipcode in zipcodes:
+            for zipcode in zipcodes_to_scrape:
                 futures.append(executor.submit(scrape_zipcode, zipcode, args.output_dir, api_key))
 
             for future in as_completed(futures):

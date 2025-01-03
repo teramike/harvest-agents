@@ -127,3 +127,10 @@ df_final = df_final[
 
 # %%
 df_final.to_csv(PATH_OUTPUT, index=False)
+
+# %%
+df_final_emails = df_final[df_final['search_email'].notna()]
+df_final_emails = df_final_emails.drop_duplicates(subset=['search_email'])
+
+PATH_OUTPUT_EMAILS = '../data/final_dataset_emails.csv'
+df_final_emails.to_csv(PATH_OUTPUT_EMAILS, index=False)

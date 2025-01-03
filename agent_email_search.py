@@ -17,16 +17,18 @@ from tqdm import tqdm
 # Load environment variables
 load_dotenv()
 
+
 async def main():
     parser = argparse.ArgumentParser(description='Agent Email Search Utility')
-    parser.add_argument(
-        'input_dir', help='Directory containing CSV files with agent data')
+    parser.add_argument('--input_dir',
+                        default='data/realtor_agents_enhanced',
+                        help='Directory containing CSV files with agent data')
     parser.add_argument('--output_dir',
                         default='data/raw_google_searches',
                         help='Directory to save the search result JSON files')
     parser.add_argument('--max_concurrent_requests',
                         type=int,
-                        default=1000,
+                        default=25,
                         help='Maximum number of concurrent HTTP requests')
     args = parser.parse_args()
 
@@ -51,15 +53,18 @@ async def main():
 
     # Process each CSV file sequentially
     for csv_file in csv_files:
+        print(f"\nProcessing {csv_file}...")
         csv_path = os.path.join(input_dir, csv_file)
-        
+
         # Read CSV file
         df_agents = pd.read_csv(csv_path, encoding='utf-8')
         df_agents['Zipcode'] = df_agents['Zipcode'].astype(str)
 
         # Check if 'id' column exists in the CSV
         if 'id' not in df_agents.columns:
-            print(f"Error: CSV file {csv_file} must contain an 'id' column. Skipping this file.")
+            print(
+                f"Error: CSV file {csv_file} must contain an 'id' column. Skipping this file."
+            )
             continue
 
         # Ensure 'id' column is of type string
@@ -69,10 +74,12 @@ async def main():
         search_tuples = generate_search_tuples(df_agents, output_dir)
 
         if not search_tuples:
+            print("No new agents to search for in this file")
             continue
 
         # Perform searches asynchronously
-        results = await async_search(search_tuples, api_key, output_dir, max_concurrent_requests)
+        results = await async_search(search_tuples, api_key, output_dir,
+                                     max_concurrent_requests)
 
         # Print results
         print(f"\nResults for {csv_file}:")
@@ -105,27 +112,42 @@ def generate_search_query(row):
 
 
 def generate_search_tuples(df, output_dir):
+    existing_files = {
+        f.replace('.json', '')
+        for f in os.listdir(output_dir) if f.endswith('.json')
+    }
     search_tuples = []
+    skipped_count = 0
+
     for _, row in df.iterrows():
         agent_uuid = row['id']
+        if agent_uuid in existing_files:
+            skipped_count += 1
+            continue
+
         query = generate_search_query(row)
-        filename = f"{agent_uuid}.json"
-        filepath = os.path.join(output_dir, filename)
-        if not os.path.exists(filepath):
-            search_tuples.append((agent_uuid, query))
+        search_tuples.append((agent_uuid, query))
+
+    print(
+        f"\nSkipping {skipped_count} agents that already have search results")
+    print(f"Will search for {len(search_tuples)} new agents")
     return search_tuples
 
 
 async def fetch(session, url, headers, max_retries=3):
     for attempt in range(max_retries):
         try:
-            async with session.get(url, headers=headers, timeout=30) as response:
+            async with session.get(url, headers=headers,
+                                   timeout=30) as response:
                 response.raise_for_status()
                 return await response.text()
         except aiohttp.ClientError as e:
             if attempt == max_retries - 1:
-                raise Exception(f"HTTP request failed after {max_retries} attempts: {e}")
-            await asyncio.sleep(1)  # Wait a bit before retrying
+                raise Exception(
+                    f"HTTP request failed after {max_retries} attempts: {e}")
+            # Exponential backoff with base of 2 seconds
+            wait_time = 2**attempt
+            await asyncio.sleep(wait_time)
 
 
 async def search(agent_uuid, query, api_key, output_dir, session):
@@ -138,19 +160,19 @@ async def search(agent_uuid, query, api_key, output_dir, session):
         encoded_query = quote_plus(encoded_query)
         location = quote_plus('United States')
         num_results = 10
-        url = (f"https://api.hasdata.com/scrape/google/serp?"
-               f"q={encoded_query}&location={location}&deviceType=desktop&gl=us&hl=en&num={num_results}")
+        url = (
+            f"https://api.hasdata.com/scrape/google/serp?"
+            f"q={encoded_query}&location={location}&deviceType=desktop&gl=us&hl=en&num={num_results}"
+        )
 
-        headers = {
-            'x-api-key': api_key,
-            'Content-Type': "application/json"
-        }
+        headers = {'x-api-key': api_key, 'Content-Type': "application/json"}
 
         data = await fetch(session, url, headers)
         search_results = json.loads(data)
 
         async with aiofiles.open(filepath, 'w', encoding='utf-8') as f:
-            await f.write(json.dumps(search_results, ensure_ascii=False, indent=2))
+            await f.write(
+                json.dumps(search_results, ensure_ascii=False, indent=2))
 
         return f"Completed search for agent_uuid: {agent_uuid}"
     except Exception as e:
@@ -159,13 +181,15 @@ async def search(agent_uuid, query, api_key, output_dir, session):
         return f"Error processing agent_uuid {agent_uuid}: {str(e)}"
 
 
-async def async_search(search_tuples, api_key, output_dir, max_concurrent_requests):
-    connector = TCPConnector(limit_per_host=max_concurrent_requests) 
+async def async_search(search_tuples, api_key, output_dir,
+                       max_concurrent_requests):
+    connector = TCPConnector(limit_per_host=max_concurrent_requests)
     timeout = aiohttp.ClientTimeout(total=60)
     async with ClientSession(connector=connector, timeout=timeout) as session:
         tasks = []
         for agent_uuid, query in search_tuples:
-            task = asyncio.ensure_future(search(agent_uuid, query, api_key, output_dir, session))
+            task = asyncio.ensure_future(
+                search(agent_uuid, query, api_key, output_dir, session))
             tasks.append(task)
 
         results = []
@@ -178,6 +202,7 @@ async def async_search(search_tuples, api_key, output_dir, max_concurrent_reques
                 # Continue processing remaining tasks even if one fails
                 continue
         return results
+
 
 if __name__ == "__main__":
     asyncio.run(main())
