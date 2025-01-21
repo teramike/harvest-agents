@@ -21,9 +21,10 @@ import glob
 import os
 
 # %%
-PATH_REALTORS = '../data/realtor_agents_enhanced'
-PATH_SEARCH_RESULTS = '../data/parsed_search_results'
-PATH_OUTPUT = '../data/final_dataset.csv'
+PATH_REALTORS = '../data/kirwood_ca/realtor_agents_enhanced'
+PATH_SEARCH_RESULTS = '../data/kirwood_ca/parsed_search_results'
+PATH_OUTPUT = '../data/kirwood_ca/final_dataset.csv'
+PATH_OUTPUT_EMAILS = '../data/kirwood_ca/final_dataset_emails.csv'
 
 # %%
 search_results_files = glob.glob(f'{PATH_SEARCH_RESULTS}/*.json')
@@ -32,7 +33,11 @@ search_results_data = []
 for file_path in search_results_files:
     file_id = os.path.splitext(os.path.basename(file_path))[0]
     with open(file_path, 'r') as f:
-        data = json.load(f)
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError:
+            print(f"Error decoding JSON from {file_path}, skipping...")
+            continue
     
     # Add ID to data
     data['id'] = file_id
@@ -129,8 +134,25 @@ df_final = df_final[
 df_final.to_csv(PATH_OUTPUT, index=False)
 
 # %%
-df_final_emails = df_final[df_final['search_email'].notna()]
-df_final_emails = df_final_emails.drop_duplicates(subset=['search_email'])
+# Count records with duplicate emails, excluding NaN values
+duplicate_emails = df_final[df_final['search_email'].notna()].duplicated(subset=['search_email']).sum()
+print(f"Number of records with duplicate emails: {duplicate_emails}")
 
-PATH_OUTPUT_EMAILS = '../data/final_dataset_emails.csv'
+# %%
+# Count records with email (non-null values)
+records_with_email = df_final['search_email'].notna().sum()
+print(f"Number of records with email: {records_with_email}")
+print(f"Percentage of records with email: {(records_with_email / len(df_final)) * 100:.2f}%")
+
+
+# %%
+df_final.shape
+
+# %%
+# This keeps the first occurrence of each email and removes subsequent duplicates
+df_final_emails = df_final[df_final['search_email'].notna()]
+df_final_emails = df_final_emails.drop_duplicates(subset=['search_email'], keep='first')
+
 df_final_emails.to_csv(PATH_OUTPUT_EMAILS, index=False)
+
+# %%

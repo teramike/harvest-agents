@@ -187,7 +187,7 @@ def scrape_zipcode(zipcode, output_dir, api_key):
 
 def main():
     parser = argparse.ArgumentParser(description='Scrape realtor.com agent data for given zipcodes.')
-    parser.add_argument('zipcodes_file', help='Path to the .txt file containing zipcodes (one per line).')
+    parser.add_argument('zipcodes_file', default='filtered_zipcodes.txt', help='Path to the .txt file containing zipcodes (one per line).')
     parser.add_argument('--output_dir', default='data/realtor_agents', help='Directory to save output CSV files.')
     parser.add_argument('--max_workers', type=int, default=10, help='Number of parallel workers.')
     args = parser.parse_args()

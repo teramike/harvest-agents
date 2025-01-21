@@ -2,6 +2,7 @@ import asyncio
 import glob
 import json
 import os
+import random
 from typing import List, Optional
 
 import aiofiles
@@ -179,14 +180,17 @@ async def process_csv_file(csv_file, semaphore):
     return results
 
 
-async def main():
+async def main(sample_file_size=None):
     csv_files = glob.glob(os.path.join(PATH_INPUT, '*.csv'))
+
+    if sample_file_size:
+        csv_files = random.sample(csv_files, sample_file_size)
 
     # Limit concurrent API calls to OpenAI
     semaphore = asyncio.Semaphore(10)  # Adjust based on API limits
 
     all_results = []
-    for csv_file in csv_files:
+    for csv_file in csv_files: 
         try:
             results = await process_csv_file(csv_file, semaphore)
             all_results.extend(results)
@@ -198,4 +202,4 @@ async def main():
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(main(sample_file_size=None))

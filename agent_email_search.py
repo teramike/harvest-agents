@@ -28,7 +28,7 @@ async def main():
                         help='Directory to save the search result JSON files')
     parser.add_argument('--max_concurrent_requests',
                         type=int,
-                        default=25,
+                        default=15,
                         help='Maximum number of concurrent HTTP requests')
     args = parser.parse_args()
 
